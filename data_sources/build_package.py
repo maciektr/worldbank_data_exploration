@@ -161,7 +161,7 @@ class PackageBuilder:
         fields = list(df.columns)
         self.log("Data file fields", fields)
 
-        data = [fields[:4] + ["Year", "Value"]]
+        data = [fields[1:5] + ["Year", "Value"]]
         for index, row in df.iterrows():
             for year, val in zip(fields[5:], row[5:]):
                 if not math.isnan(val):
@@ -196,6 +196,16 @@ class PackageBuilder:
                             "name": "Country Code",
                             "type": "string",
                             "description": "ISO 3-digit ISO code extended to include regional codes e.g. EUR, ARB etc",
+                        },
+                        {
+                            "name": "Indicator Name",
+                            "type": "string",
+                            "description": "Indicator name",
+                        },
+                        {
+                            "name": "Indicator Code",
+                            "type": "string",
+                            "description": "Indicator ID e.g. FP.CPI.TOTL.ZG",
                         },
                         {"name": "Year", "type": "year", "description": "Year"},
                         {
