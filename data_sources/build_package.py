@@ -3,20 +3,20 @@ Retrieve indicator data from World Bank Open Data
 Convert to datapackage format: https://datahub.io/docs/data-packages
 Inspired by: https://github.com/rufuspollock/world-bank-data
 """
-from data_sources.helpers import ProgressBar, build_url
+from data_sources.helpers import build_url
 from itertools import repeat
 from multiprocessing import Pool
+from typing import Dict, Optional, List
 from zipfile import ZipFile
 import codecs
 import csv
+import grequests
 import json
 import math
 import os
 import pandas as pd
 import settings
 import sys
-import urllib.parse
-import urllib.request
 
 
 class PackageBuilder:
@@ -24,8 +24,14 @@ class PackageBuilder:
     PACKAGES_DIR = "indicators/"
 
     def __init__(
-        self, indicator: str, base_dir: str = settings.DATA_DIR, verbose: bool = False
+        self,
+        indicator: str,
+        base_dir: str = settings.DATA_DIR,
+        verbose: bool = False,
+        overwrite: bool = True,
+        download_query: Optional[Dict[str, str]] = {},
     ):
+        self.overwrite = overwrite
         self.verbose = verbose
 
         self.indicator = indicator
@@ -44,7 +50,7 @@ class PackageBuilder:
             self.__class__.BASE_URL,
             "country/all/indicator/",
             self.indicator,
-            query={"downloadformat": "csv"},
+            query={"downloadformat": "csv", **download_query},
         )
         self.meta_dest = os.path.join(
             self.data_directory, "cache", f"{self.indicator}.meta.json"
@@ -67,16 +73,27 @@ class PackageBuilder:
         if self.verbose:
             print(*message, **kwargs)
 
-    def execute(self, overwrite=True):
+    def execute(self):
         f"""
         Retrieve a world bank indicator and convert to a data package.
         Data Package is stored at {self.data_directory}/indicators/{self.indicator}
         """
-        if os.path.exists(self.datapackage_path) and not overwrite:
-            return self.datapackage_path
-
         # Download files
-        self.retrieve()
+        responses = grequests.map(self.make_requests())
+        self.retrieve(responses)
+        return self.datapackage_path
+
+    def retrieve(self, responses):
+        # Write cache
+        def write_file(resp, path):
+            with open(path, "wb") as f:
+                f.write(resp.content)
+
+        for response in responses:
+            if response.url == self.data_url:
+                write_file(response, self.data_dest)
+            if response.url == self.meta_url:
+                write_file(response, self.meta_dest)
 
         # Process files
         (meta, data) = self.extract()
@@ -84,17 +101,22 @@ class PackageBuilder:
         self.datapackage(meta, data, self.datapackage_path)
         self.log("Data package written to: ", self.datapackage_path)
 
-        return self.datapackage_path
-
-    def retrieve(self):
+    def make_requests(self):
         cache_dir = os.path.join(self.data_directory, "cache")
         os.makedirs(cache_dir, exist_ok=True)
+        requests_list = []
 
-        if not os.path.exists(self.meta_dest):
-            urllib.request.urlretrieve(self.meta_url, self.meta_dest, ProgressBar())
+        if not os.path.exists(self.meta_dest) or self.overwrite:
+            requests_list.append(
+                grequests.get(
+                    self.meta_url,
+                )
+            )
 
-        if not os.path.exists(self.data_dest):
-            urllib.request.urlretrieve(self.data_url, self.data_dest, ProgressBar())
+        if not os.path.exists(self.data_dest) or self.overwrite:
+            requests_list.append(grequests.get(self.data_url))
+
+        return requests_list
 
     def extract(self):
         """
@@ -102,6 +124,8 @@ class PackageBuilder:
 
         @return: (metadata, data) where metadata is Data Package JSON and data is normalized CSV.
         """
+        if os.path.exists(self.datapackage_path) and not self.overwrite:
+            return self.datapackage_path
 
         # Process metadata
         metadata_file = open(self.meta_dest, "r")
@@ -193,14 +217,31 @@ class PackageBuilder:
             writer.writerows(data)
 
 
+def execute_builders(builders: List[PackageBuilder]):
+    requests = []
+    for builder in builders:
+        requests.extend(builder.make_requests())
+
+    # Download files
+    responses = grequests.map(requests)
+
+    for builder in builders:
+        builder.retrieve(responses)
+
+
 def build_package(arg):
     ind, kwargs = arg
-    return PackageBuilder(ind, **kwargs).execute(**kwargs)
+    return PackageBuilder(ind, **kwargs).execute()
 
 
-def build_packages(indicators, **kwargs):
-    with Pool(settings.PROCESSING_POOL) as pool:
-        return pool.map(build_package, zip(indicators, repeat(kwargs)))
+def build_packages(indicators, concurrent: bool = False, **kwargs):
+    # May not work in jupyter notebook due to multiprocessing incompatibility
+    if concurrent:
+        with Pool(settings.PROCESSING_POOL) as pool:
+            return pool.map(build_package, zip(indicators, repeat(kwargs)))
+
+    builders = [PackageBuilder(ind, **kwargs) for ind in indicators]
+    return execute_builders(builders)
 
 
 if __name__ == "__main__":
@@ -217,5 +258,5 @@ Example:
         sys.exit(1)
 
     indicator_name = sys.argv[1]
-    processor = PackageBuilder(indicator_name, base_dir="..", verbose=True)
+    processor = PackageBuilder(indicator_name, verbose=True)
     processor.execute()
