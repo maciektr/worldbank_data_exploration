@@ -4,6 +4,8 @@ Convert to datapackage format: https://datahub.io/docs/data-packages
 Inspired by: https://github.com/rufuspollock/world-bank-data
 """
 from data_sources.helpers import ProgressBar, build_url
+from itertools import repeat
+from multiprocessing import Pool
 from zipfile import ZipFile
 import codecs
 import csv
@@ -56,15 +58,22 @@ class PackageBuilder:
         self.log("Data url: ", self.data_url)
         self.log("Data dest: ", self.data_dest)
 
+        self.datapackage_path = os.path.join(
+            self.data_directory, self.__class__.PACKAGES_DIR, self.indicator.lower()
+        )
+        self.log("Datapackage path", self.datapackage_path)
+
     def log(self, *message, **kwargs):
         if self.verbose:
             print(*message, **kwargs)
 
-    def execute(self):
+    def execute(self, overwrite=True):
         f"""
         Retrieve a world bank indicator and convert to a data package.
         Data Package is stored at {self.data_directory}/indicators/{self.indicator}
         """
+        if os.path.exists(self.datapackage_path) and not overwrite:
+            return self.datapackage_path
 
         # Download files
         self.retrieve()
@@ -72,13 +81,10 @@ class PackageBuilder:
         # Process files
         (meta, data) = self.extract()
 
-        datapackage_path = os.path.join(
-            self.data_directory, self.__class__.PACKAGES_DIR, meta["name"]
-        )
-        self.datapackage(meta, data, datapackage_path)
-        self.log("Data package written to: ", datapackage_path)
+        self.datapackage(meta, data, self.datapackage_path)
+        self.log("Data package written to: ", self.datapackage_path)
 
-        return datapackage_path
+        return self.datapackage_path
 
     def retrieve(self):
         cache_dir = os.path.join(self.data_directory, "cache")
@@ -185,6 +191,16 @@ class PackageBuilder:
         with open(datafp, "w") as fo:
             writer = csv.writer(fo)
             writer.writerows(data)
+
+
+def build_package(arg):
+    ind, kwargs = arg
+    return PackageBuilder(ind, **kwargs).execute(**kwargs)
+
+
+def build_packages(indicators, **kwargs):
+    with Pool(settings.PROCESSING_POOL) as pool:
+        return pool.map(build_package, zip(indicators, repeat(kwargs)))
 
 
 if __name__ == "__main__":
