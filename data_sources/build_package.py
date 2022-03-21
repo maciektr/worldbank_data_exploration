@@ -28,9 +28,11 @@ class PackageBuilder:
         indicator: str,
         base_dir: str = settings.DATA_DIR,
         verbose: bool = False,
-        overwrite: bool = True,
-        download_query: Optional[Dict[str, str]] = {},
+        overwrite: bool = False,
+        download_query=None,
     ):
+        if download_query is None:
+            download_query = {}
         self.overwrite = overwrite
         self.verbose = verbose
 
@@ -96,6 +98,9 @@ class PackageBuilder:
                 write_file(response, self.meta_dest)
 
         # Process files
+        if os.path.exists(self.datapackage_path) and not self.overwrite:
+            return
+
         (meta, data) = self.extract()
 
         self.datapackage(meta, data, self.datapackage_path)
@@ -124,9 +129,6 @@ class PackageBuilder:
 
         @return: (metadata, data) where metadata is Data Package JSON and data is normalized CSV.
         """
-        if os.path.exists(self.datapackage_path) and not self.overwrite:
-            return self.datapackage_path
-
         # Process metadata
         metadata_file = open(self.meta_dest, "r")
         raw_metadata = json.load(metadata_file)[1][0]
@@ -251,7 +253,8 @@ def build_packages(indicators, concurrent: bool = False, **kwargs):
             return pool.map(build_package, zip(indicators, repeat(kwargs)))
 
     builders = [PackageBuilder(ind, **kwargs) for ind in indicators]
-    return execute_builders(builders)
+    execute_builders(builders)
+    return [builder.datapackage_path for builder in builders]
 
 
 if __name__ == "__main__":
