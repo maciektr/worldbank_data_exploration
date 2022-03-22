@@ -1,0 +1,9 @@
+black[jupyter]==22.1.0
+grequests==0.6.0
+jupyter==1.0.0
+matplotlib==3.5.1
+numpy==1.22.3
+pandas-datapackage-reader==0.18.0
+pandas==1.4.1
+requests==2.27.1
+wbgapi==1.0.7
