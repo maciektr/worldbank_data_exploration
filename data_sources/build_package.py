@@ -6,7 +6,7 @@ Inspired by: https://github.com/rufuspollock/world-bank-data
 from data_sources.helpers import build_url
 from itertools import repeat
 from multiprocessing import Pool
-from typing import Dict, Optional, List
+from typing import List
 from zipfile import ZipFile
 import codecs
 import csv
@@ -15,7 +15,7 @@ import json
 import math
 import os
 import pandas as pd
-import settings
+from data_sources import settings
 import sys
 
 
