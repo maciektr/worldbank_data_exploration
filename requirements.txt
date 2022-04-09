@@ -6,4 +6,7 @@ numpy==1.22.3
 pandas-datapackage-reader==0.18.0
 pandas==1.4.1
 requests==2.27.1
+scikit-learn==1.0.2
+scipy==1.8.0
+sklearn==0.0
 wbgapi==1.0.7
