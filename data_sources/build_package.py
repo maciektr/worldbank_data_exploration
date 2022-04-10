@@ -19,6 +19,11 @@ import settings
 import sys
 
 
+class DownloadError(Exception):
+    def __init__(self, response=None):
+        self.response = response
+
+
 class PackageBuilder:
     BASE_URL = "https://api.worldbank.org/v2/"
     PACKAGES_DIR = "indicators/"
@@ -92,6 +97,9 @@ class PackageBuilder:
                 f.write(resp.content)
 
         for response in responses:
+            if response.status_code != 200:
+                raise DownloadError(response)
+
             if response.url == self.data_url:
                 write_file(response, self.data_dest)
             if response.url == self.meta_url:
