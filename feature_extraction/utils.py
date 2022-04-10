@@ -10,5 +10,8 @@ class Normalizer():
         self.norms_ = norms
         return X
 
+    def transform(self, X):
+        return X / self.norms_[:, None]
+
     def inverse_transform(self, X):
         return X * self.norms_[:, None]
