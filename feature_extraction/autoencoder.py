@@ -13,7 +13,7 @@ class Autoencoder:
 
     def __init__(self, n_bottleneck, input_len=21, model_path=None):
         """
-        :param n_bottleneck: Number of features to extract
+        :param n_bottleneck: Number of neurons in the bottleneck
         :param input_len: Length of the time series
         :param model_path: Path to save model weights and loss history. If None, will be set to
         f'model_weights/autoencoder/{n_bottleneck}'
@@ -115,7 +115,7 @@ class Autoencoder:
         :param X: Matrix (n x m) of n time series, each of length m
         :param normalize: Determines whether to normalize the data or not
         :param loss_scale: Loss will be multiplied by this number to increase readability
-        :return:
+        :return: Loss value
         """
         self.autoencoder.compile('adam', loss='mae', loss_weights=loss_scale)
         if normalize:
