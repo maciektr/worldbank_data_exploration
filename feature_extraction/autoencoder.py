@@ -154,8 +154,11 @@ if __name__ == '__main__':
 
     X = np.random.random((100, 21))
     autoencoder.compile_and_train(X, save=False, n_epochs=500)
+    # autoencoder.compile_and_train(X, save=True, n_epochs=500)
 
     print(autoencoder.encode(X[:5]))
+    # autoencoder.load_weights()
+    # print(autoencoder.encode(X[:5]))
 
     print('==============================================================================')
     print(X[3])
