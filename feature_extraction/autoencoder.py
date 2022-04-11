@@ -129,7 +129,7 @@ class Autoencoder:
         return self.autoencoder.summary()
 
     def _build_model(self):
-        dense_len = (self.input_len + 4 - 1) // 4 * 64
+        dense_len = (self.input_len + 8 - 1) // 8 * 128
 
         inputs = k_layers.Input((self.input_len,))
         x = k_layers.Reshape((-1, 1))(inputs)
@@ -140,10 +140,16 @@ class Autoencoder:
         x = k_layers.Conv1D(64, 3, activation='relu', padding='same')(x)
         x = k_layers.MaxPooling1D(padding='same')(x)
 
+        x = k_layers.Conv1D(128, 3, activation='relu', padding='same')(x)
+        x = k_layers.MaxPooling1D(padding='same')(x)
+
         x = k_layers.Flatten()(x)
         encoded_outputs = k_layers.Dense(self.n_bottleneck)(x)
         x = k_layers.Dense(dense_len)(encoded_outputs)
-        x = k_layers.Reshape((-1, 64))(x)
+        x = k_layers.Reshape((-1, 128))(x)
+
+        x = k_layers.Conv1D(128, 3, activation='relu', padding='same')(x)
+        x = k_layers.UpSampling1D()(x)
 
         x = k_layers.Conv1D(64, 3, activation='relu', padding='same')(x)
         x = k_layers.UpSampling1D()(x)
