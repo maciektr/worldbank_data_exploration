@@ -27,16 +27,16 @@ class Autoencoder:
         self.encoder, self.autoencoder = self._build_model()
         self.history = None
 
-    def compile_and_train(self, X, batch_size=256, n_epochs=1000, lr=0.001, lr_patience=100, min_lr=0.00005,
-                          loss_scale=10_000, verbose=1, save=True, normalize=True):
+    def compile_and_train(self, X, batch_size=256, n_epochs=1000, lr=0.001, lr_patience=100, loss_scale=10_000,
+                          verbose=1, save=True, normalize=True):
         """
         Compile and train the autoencoder
         :param X: An array of shape (n x m) with n time series, each of length m
         :param batch_size: batch size
         :param n_epochs: number of epochs
-        :param lr: learning rate
+        :param lr: learning rate. If assigned to None, and the model weights have been loaded (load_weights),
+        the learning rate from the loaded model will be used.
         :param lr_patience: patience for the ReduceLROnPlateau callback. If None, learning rate is constant
-        :param min_lr: Minimum learning rate for the ReduceLROnPlateau callback
         :param loss_scale: Loss will be multiplied by this number to increase readability
         :param verbose: verbose parameter for training the model
         :param save: True: save the weights and history to self.model_path; False: do not save
@@ -47,10 +47,14 @@ class Autoencoder:
             X = Normalizer().fit_transform(X)
 
         self.autoencoder.compile(tf.keras.optimizers.Adam(learning_rate=lr), loss='mae', loss_weights=loss_scale)
+        # for some reason, when compiling after load_weights, lr is set to the value of the model whose weights are
+        # loaded. Therefore, lr is set again
+        if lr is not None:
+            self.autoencoder.optimizer.learning_rate.assign(lr)
+
         callbacks = []
         if lr_patience is not None:
-            callbacks.append(tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=lr_patience,
-                                                                  min_delta=min_lr))
+            callbacks.append(tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=lr_patience))
 
         self.history = self.autoencoder.fit(X, X, batch_size=batch_size, epochs=n_epochs, verbose=verbose,
                                             callbacks=callbacks).history
