@@ -91,6 +91,8 @@ def clear_dataset(dataset, nans_threshold):
     df_cleared.drop(index=countries_with_nans, level=1, inplace=True)
     df_cleared = df_cleared.unstack()
     df_cleared = df_cleared.bfill().ffill()
+    df_cleared = df_cleared.stack()
+    df_cleared.dropna(axis=0, inplace=True)
 
     return df_cleared.stack()
 
