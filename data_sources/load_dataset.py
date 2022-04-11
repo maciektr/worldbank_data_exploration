@@ -94,7 +94,7 @@ def clear_dataset(dataset, nans_threshold):
     df_cleared = df_cleared.stack()
     df_cleared.dropna(axis=0, inplace=True)
 
-    return df_cleared.stack()
+    return df_cleared
 
 
 def load_time_series():
