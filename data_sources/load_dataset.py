@@ -1,5 +1,6 @@
 from data_sources.get import get_indicators
 import numpy as np
+from pandas import DataFrame
 
 
 def load_dataset(indicators=None, years=slice(2000, 2020), nans_threshold=2):
@@ -107,3 +108,15 @@ def load_time_series():
         time_series_dict[col] = df[col].unstack().values.T
 
     return time_series_dict, countries, years
+
+
+def split_by_columns(dataset: DataFrame):
+    frames = {}
+    for column in dataset.columns:
+        frames[column] = (
+            dataset[column]
+            .to_frame()
+            .reset_index()
+            .pivot(index="Year", columns="Country Name", values=column)
+        )
+    return frames
