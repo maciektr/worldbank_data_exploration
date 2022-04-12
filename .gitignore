@@ -1,4 +1,4 @@
-notebooks/data
+notebooks/feature_extraction/model_checkpoints
 
 # Created by https://www.toptal.com/developers/gitignore/api/osx,linux,python,windows,virtualenv,jupyternotebooks,visualstudiocode,pycharm+all
 # Edit at https://www.toptal.com/developers/gitignore?templates=osx,linux,python,windows,virtualenv,jupyternotebooks,visualstudiocode,pycharm+all
