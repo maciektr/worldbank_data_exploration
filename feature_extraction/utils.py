@@ -1,7 +1,7 @@
 from sklearn.preprocessing import normalize
 
 
-class Normalizer():
+class Normalizer:
     def __init__(self):
         self.norms_ = None
 
