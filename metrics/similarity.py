@@ -66,7 +66,11 @@ class SimilarityBuilder:
             for metric in self.metrics:
                 path = get_metric_path(self.cache_dir, indicator, metric)
                 matrix = pd.read_csv(path)
-                matrix = matrix.reset_index().drop(columns=["index"]).set_index("Country Name")
+                matrix = (
+                    matrix.reset_index()
+                    .drop(columns=["index"])
+                    .set_index("Country Name")
+                )
                 result[indicator][metric] = matrix
         return result
 
