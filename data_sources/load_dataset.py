@@ -3,26 +3,76 @@ import numpy as np
 from pandas import DataFrame
 
 
-def load_dataset(indicators=None, years=slice(2000, 2020), nans_threshold=2):
-    if indicators is None:
-        indicators = [
-            "SP.POP.GROW",
-            "FP.CPI.TOTL.ZG",
-            "SP.DYN.LE00.IN",
-            "NE.EXP.GNFS.ZS",
-            "NY.GDP.MKTP.KD.ZG",
-            "SL.UEM.TOTL.ZS",
-            "NV.AGR.TOTL.ZS",
-            "EG.ELC.ACCS.ZS",
-            "AG.LND.FRST.ZS",
-            "SH.DYN.MORT",
-            "NY.GDP.TOTL.RT.ZS",
-            "SP.DYN.TFRT.IN",
-            "EN.URB.LCTY.UR.ZS",
-            "TG.VAL.TOTL.GD.ZS",
-            "MS.MIL.XPND.GD.ZS",
-        ]
+INDICATORS_SELECTED = [
+    "SP.POP.GROW",        # Population growth (annual %)
+    "FP.CPI.TOTL.ZG",     # Inflation, consumer prices (annual %)
+    "SP.DYN.LE00.IN",     # Life expectancy at birth, total (years)
+    "NE.EXP.GNFS.ZS",     # Exports of goods and services (% of GDP)
+    "NY.GDP.MKTP.KD.ZG",  # GDP growth (annual %)
+    "SL.UEM.TOTL.ZS",     # Unemployment, total (% of total labor force) (modeled ILO estimate)
+    "NV.AGR.TOTL.ZS",     # Agriculture, forestry, and fishing, value added (% of GDP)
+    "EG.ELC.ACCS.ZS",     # Access to electricity (% of population)
+    "AG.LND.FRST.ZS",     # Forest area (% of land area)
+    "SH.DYN.MORT",        # Mortality rate, under-5 (per 1,000 live births)
+    "NY.GDP.TOTL.RT.ZS",  # Total natural resources rents (% of GDP)
+    "SP.DYN.TFRT.IN",     # Fertility rate, total (births per woman)
+    "EN.URB.LCTY.UR.ZS",  # Population in the largest city (% of urban population)
+    "TG.VAL.TOTL.GD.ZS",  # Merchandise trade (% of GDP)
+    "MS.MIL.XPND.GD.ZS",  # Military expenditure (% of GDP)
+]
 
+INDICATORS_AGRICULTURE = [
+    "AG.LND.ARBL.ZS",     # Arable land (% of land area)
+    "AG.YLD.CREL.KG",     # Cereal yield (kg per hectare)
+    "SL.AGR.EMPL.FE.ZS",  # Employment in agriculture, female (% of female employment) (modeled ILO estimate)
+    "AG.CON.FERT.ZS",     # Fertilizer consumption (kilograms per hectare of arable land)
+    "AG.LND.FRST.ZS",     # Forest area (% of land area)
+    "AG.PRD.LVSK.XD",     # Livestock production index (2014-2016 = 100)
+    "AG.LND.AGRI.ZS",     # Agricultural land (% of land area)
+    "NV.AGR.TOTL.ZS",     # Agriculture, forestry, and fishing, value added (% of GDP)
+    "AG.LND.ARBL.HA.PC",  # Arable land (hectares per person)
+    "AG.PRD.CROP.XD",     # Crop production index (2014-2016 = 100)
+    "SL.AGR.EMPL.MA.ZS",  # Employment in agriculture, male (% of male employment) (modeled ILO estimate)
+    "AG.PRD.FOOD.XD",     # Food production index (2014-2016 = 100)
+    "AG.LND.CROP.ZS",     # Permanent cropland (% of land area)
+    "SP.RUR.TOTL.ZS",     # Rural population (% of total population)
+]
+
+INDICATORS_HEALTH = [
+    "SP.DYN.LE00.IN",     # Life expectancy at birth, total (years)
+    "SH.DYN.MORT",        # Mortality rate, under-5 (per 1,000 live births)
+    "SP.DYN.TFRT.IN",     # Fertility rate, total (births per woman)
+    "SN.ITK.DEFC.ZS",     # Prevalence of undernourishment (% of population)
+    "SH.IMM.IDPT",        # Immunization, DPT (% of children ages 12-23 months)
+    "SP.POP.GROW",        # Population growth (annual %)
+    "SP.POP.DPND",        # Age dependency ration ($ of working-age population)
+    "SH.TBS.INCD",        # Incidence of tuberculosis (per 100,000 people)
+    "SH.IMM.MEAS",        # Immunization, measles (% of children ages 12-23 months)
+    "SP.ADO.TFRT",        # Adolescent fertility rate (births per 1,000 women ages 15-19)
+    "SP.DYN.CDRT.IN",     # Death rate, crude (per 1,000 people)
+    "SP.DYN.CBRT.IN",     # Birth rate, crude (per 1,000 people)
+]
+
+INDICATORS_ECONOMY = [
+    'NY.GNP.PCAP.CD',     # GNI per capita, Atlas method (current US$)
+    'NE.GDI.TOTL.ZS',     # Gross capital formation (% of GDP)
+    'NE.IMP.GNFS.ZS',     # Imports of goods and services (% of GDP)
+    'NY.GNS.ICTR.ZS',     # Gross savings (% of GDP)
+    'NV.IND.TOTL.ZS',     # Industry (including construction), value added (% of GDP) - kilka braków
+    'NY.GDP.DEFL.KD.ZG',  # Inflation, GDP deflator (annual %)
+    'FP.CPI.TOTL.ZG',     # Inflation, consumer prices (annual %)
+    'NV.MNF.TECH.ZS.UN',  # Medium and high-tech manufacturing value added (% manufacturing value added)
+    'NV.AGR.TOTL.ZS',     # Agriculture, forestry, and fishing, value added (% of GDP)
+    'NE.EXP.GNFS.ZS',     # Exports of goods and services (% of GDP)
+    'NY.GDP.PCAP.CD',     # GDP per capita (current US$)
+    'NY.GDP.MKTP.KD.ZG'   # GDP growth (annual %)   
+]
+
+ALL_INDICATORS = list(set(INDICATORS_SELECTED + INDICATORS_AGRICULTURE + INDICATORS_HEALTH + INDICATORS_ECONOMY))
+
+INDICATORS_YEARS_RANGE = slice(2000, 2018)
+
+def load_dataset(indicators=ALL_INDICATORS, years=INDICATORS_YEARS_RANGE, nans_threshold=2):
     df = get_indicators(indicators)
     df = df.pivot_table(
         values="Value", index="Year", columns=["Indicator Name", "Country Name"]
@@ -98,8 +148,8 @@ def clear_dataset(dataset, nans_threshold):
     return df_cleared
 
 
-def load_time_series():
-    df = load_dataset()
+def load_time_series(indicators=ALL_INDICATORS, years=INDICATORS_YEARS_RANGE, nans_threshold=2):
+    df = load_dataset(indicators, years, nans_threshold)
     time_series_dict = {}
     years = df.unstack().index.values
     countries = df.unstack().columns.get_level_values(1).unique().values
