@@ -30,7 +30,9 @@ def cluster_each_feature(data, linkage_matrices, number_of_clusters):
     data_clustered = data.copy()
 
     for feature, X in data_clustered.items():
-        cluster_labels = hac.fcluster(linkage_matrices[feature], number_of_clusters[feature], criterion="maxclust")
+        cluster_labels = hac.fcluster(
+            linkage_matrices[feature], number_of_clusters[feature], criterion="maxclust"
+        )
         x_clustered = np.column_stack((X, cluster_labels))
         data_clustered[feature] = x_clustered
 
@@ -59,7 +61,9 @@ def dendrogram_features_combined(data, title, feature_extraction=False):
 
 def cluster_combined_features(data, linkage_matrix, number_of_clusters):
     data_clustered = np.copy(data)
-    cluster_labels = hac.fcluster(linkage_matrix, number_of_clusters, criterion="maxclust")
+    cluster_labels = hac.fcluster(
+        linkage_matrix, number_of_clusters, criterion="maxclust"
+    )
     data_clustered = np.column_stack((data_clustered, cluster_labels))
 
     return data_clustered
