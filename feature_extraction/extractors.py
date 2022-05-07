@@ -13,21 +13,23 @@ class AutoencoderExtractor:
         feature,
         root=None,
         model="autoencoder",
-        feature_set="main_feature_set",
         n_bottleneck=4,
         input_len=21,
+        trim_feature=True
     ):
         """
         :param feature: Feature name
         :param root: Root directory of the repo
         :param model: Model name
-        :param feature_set: Feature set name
         :param n_bottleneck: Number of neurons in the bottleneck
         :param input_len: Length of the time series
+        :param trim_feature: Trim the feature length to 65 to avoid problems with saving/reading the model weights
         """
         if root is None:
             root = ".."
-        model_path = f"{root}/feature_extraction/model_weights/{model}_{n_bottleneck}/{feature_set}/{feature}"
+        if trim_feature:
+            feature = feature[:65]
+        model_path = f"{root}/feature_extraction/model_weights/{model}_{n_bottleneck}/{feature}"
         self.autoencoder = Autoencoder(
             n_bottleneck, input_len=input_len, model_path=model_path
         )
