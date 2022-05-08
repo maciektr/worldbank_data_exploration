@@ -15,7 +15,7 @@ class AutoencoderExtractor:
         model="autoencoder",
         n_bottleneck=4,
         input_len=21,
-        trim_feature=True
+        trim_feature=True,
     ):
         """
         :param feature: Feature name
@@ -29,7 +29,9 @@ class AutoencoderExtractor:
             root = ".."
         if trim_feature:
             feature = feature[:65]
-        model_path = f"{root}/feature_extraction/model_weights/{model}_{n_bottleneck}/{feature}"
+        model_path = (
+            f"{root}/feature_extraction/model_weights/{model}_{n_bottleneck}/{feature}"
+        )
         self.autoencoder = Autoencoder(
             n_bottleneck, input_len=input_len, model_path=model_path
         )
