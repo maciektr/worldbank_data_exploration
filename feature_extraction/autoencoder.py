@@ -88,7 +88,7 @@ class Autoencoder:
 
         return self
 
-    def load_weights(self, path=None):
+    def load_weights(self, path=None, load_history=False):
         """
         Load weights and history from self.model_path
         :return: self
@@ -96,7 +96,8 @@ class Autoencoder:
         if path is None:
             path = self.model_path
 
-        self.history = pd.read_csv(f"{path}/loss_log.csv")
+        if load_history:
+            self.history = pd.read_csv(f"{path}/loss_log.csv")
         self.autoencoder.load_weights(f"{path}/weights").expect_partial()
 
         return self
