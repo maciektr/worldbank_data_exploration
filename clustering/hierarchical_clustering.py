@@ -3,7 +3,7 @@ import scipy.cluster.hierarchy as hac
 import numpy as np
 from feature_extraction.extractors import AutoencoderExtractor
 
-INPUT_LEN = 21
+INPUT_LEN = 19
 
 
 def dendrogram_each_feature(data, feature_extraction=False):
