@@ -14,25 +14,29 @@ def get_project_dir():
     return os.path.join(repo_folder, repo_name)
 
 
-def dendrogram_each_feature(data, feature_extraction=False, shape=None, combined_image_name=None):
+def dendrogram_each_feature(
+    data, feature_extraction=False, shape=None, combined_image_name=None
+):
     linkage_matrices = {}
     i = 1
     project_dir = get_project_dir()
-    images_dir = os.path.join(project_dir, 'images')
+    images_dir = os.path.join(project_dir, "images")
 
     if shape is not None:
         plt.figure(figsize=(24, 16))
         plt.subplots_adjust(hspace=0.3)
-        plt.rcParams['figure.constrained_layout.use'] = True
+        plt.rcParams["figure.constrained_layout.use"] = True
 
     for feature, X in data.items():
         image_name = feature
 
         if feature_extraction:
-            extractor = AutoencoderExtractor(feature, input_len=INPUT_LEN, root=project_dir)
+            extractor = AutoencoderExtractor(
+                feature, input_len=INPUT_LEN, root=project_dir
+            )
             Y = extractor.extract_features(X)
             linkage_matrix = hac.linkage(Y, method="ward")
-            image_name = image_name + ' (with feature extraction)'
+            image_name = image_name + " (with feature extraction)"
         else:
             linkage_matrix = hac.linkage(X, method="ward")
 
@@ -71,12 +75,14 @@ def cluster_each_feature(data, linkage_matrices, number_of_clusters):
 
 def dendrogram_features_combined(data, title, feature_extraction=False):
     project_dir = get_project_dir()
-    images_dir = os.path.join(project_dir, 'images')
+    images_dir = os.path.join(project_dir, "images")
 
     if feature_extraction:
         y_all = []
         for feature, X in data.items():
-            extractor = AutoencoderExtractor(feature, input_len=INPUT_LEN, root=project_dir)
+            extractor = AutoencoderExtractor(
+                feature, input_len=INPUT_LEN, root=project_dir
+            )
             y_feature = extractor.extract_features(X)
             y_all.append(y_feature)
 
@@ -87,7 +93,7 @@ def dendrogram_features_combined(data, title, feature_extraction=False):
     linkage_matrix = hac.linkage(y_all, method="ward")
     hac.dendrogram(linkage_matrix)
     plt.title(title)
-    plt.savefig(os.path.join(os.path.join(images_dir, 'combined'), title))
+    plt.savefig(os.path.join(os.path.join(images_dir, "combined"), title))
     plt.show()
 
     return linkage_matrix, y_all
