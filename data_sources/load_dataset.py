@@ -81,9 +81,11 @@ INDICATORS_YEARS_RANGE = slice(2000, 2018)
 
 
 def load_dataset(
-    indicators=ALL_INDICATORS, years=INDICATORS_YEARS_RANGE, nans_threshold=2
+    indicators=None, years=INDICATORS_YEARS_RANGE, nans_threshold=2, **kwargs
 ):
-    df = get_indicators(indicators)
+    if indicators is None:
+        indicators = ALL_INDICATORS
+    df = get_indicators(indicators, **kwargs)
     df = df.pivot_table(
         values="Value", index="Year", columns=["Indicator Name", "Country Name"]
     )
@@ -182,3 +184,10 @@ def split_by_columns(dataset: DataFrame):
             .pivot(index="Year", columns="Country Name", values=column)
         )
     return frames
+
+
+if __name__ == "__main__":
+    usage = """
+            Usage: python -m data_sources.load_dataset
+            """
+    load_dataset(concurrent=True)
