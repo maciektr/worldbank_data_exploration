@@ -1,5 +1,6 @@
 notebooks/feature_extraction/model_checkpoints
 notebooks/feature_extraction/plots
+notebooks/plots
 feature_extraction/model_weights/**/loss_log.csv
 .images
 
