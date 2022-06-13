@@ -28,7 +28,7 @@ def dendrogram_each_feature(
         plt.rcParams["figure.constrained_layout.use"] = True
 
     for feature, X in data.items():
-        image_name = feature
+        image_name = feature.replace(" ", "_")
 
         if feature_extraction:
             extractor = AutoencoderExtractor(
@@ -36,14 +36,16 @@ def dendrogram_each_feature(
             )
             Y = extractor.extract_features(X)
             linkage_matrix = hac.linkage(Y, method="ward")
-            image_name = image_name + " (with feature extraction)"
+            image_name = image_name + "_with_feature_extraction"
         else:
             linkage_matrix = hac.linkage(X, method="ward")
+            image_name = image_name + "_dendrograms.pdf"
 
         if shape is None:
             plt.figure(figsize=(16, 8))
             hac.dendrogram(linkage_matrix)
             plt.title(feature)
+            plt.tight_layout()
             plt.savefig(os.path.join(images_dir, image_name))
             plt.show()
             linkage_matrices[feature] = linkage_matrix
@@ -55,7 +57,10 @@ def dendrogram_each_feature(
             i += 1
 
     if shape is not None:
-        plt.savefig(os.path.join(images_dir, combined_image_name))
+        plt.tight_layout()
+        plt.savefig(
+            os.path.join(images_dir, combined_image_name.replace(" ", "_") + ".pdf")
+        )
 
     return linkage_matrices
 
@@ -93,7 +98,9 @@ def dendrogram_features_combined(data, title, feature_extraction=False):
     linkage_matrix = hac.linkage(y_all, method="ward")
     hac.dendrogram(linkage_matrix)
     plt.title(title)
-    plt.savefig(os.path.join(os.path.join(images_dir, "combined"), title))
+    title = title.replace("-", "")
+    title = title.replace(" ", "_")
+    plt.savefig(os.path.join(os.path.join(images_dir, "combined"), title + ".pdf"))
     plt.show()
 
     return linkage_matrix, y_all
